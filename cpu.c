@@ -750,7 +750,7 @@ void cpuCycle(CPU *cpu) {
            while (cpu->ram[cpu->r[0xf]] != 0)
              buffer[i++] = cpu->ram[cpu->r[0xf]++];
            buffer[i] = 0;
-           i = _unlink(buffer);
+           i = unlink(buffer);
            cpu->df = (i == 0) ? 0 : 1;
            sret(cpu);
            return;
@@ -771,9 +771,9 @@ void cpuCycle(CPU *cpu) {
              buffer[i++] = cpu->ram[cpu->r[0xf]++];
            buffer[i] = 0;
 #ifdef _WIN32
-           i = _mkdir(buffer);
+           i = mkdir(buffer);
 #else
-           i = _mkdir(buffer, 0755);
+           i = mkdir(buffer, 0755);
 #endif
            cpu->df = (i == 0) ? 0 : 1;
            sret(cpu);
@@ -784,7 +784,7 @@ void cpuCycle(CPU *cpu) {
            while (cpu->ram[cpu->r[0xf]] != 0)
              buffer[i++] = cpu->ram[cpu->r[0xf]++];
            buffer[i] = 0;
-           i = _chdir(buffer);
+           i = chdir(buffer);
            cpu->df = (i == 0) ? 0 : 1;
            sret(cpu);
            return;
@@ -794,7 +794,7 @@ void cpuCycle(CPU *cpu) {
            while (cpu->ram[cpu->r[0xf]] != 0)
              buffer[i++] = cpu->ram[cpu->r[0xf]++];
            buffer[i] = 0;
-           i = _rmdir(buffer);
+           i = rmdir(buffer);
            cpu->df = (i == 0) ? 0 : 1;
            sret(cpu);
            return;
