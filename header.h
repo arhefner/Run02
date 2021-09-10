@@ -16,6 +16,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #define O_BINARY        0
 #endif
 

@@ -581,7 +581,7 @@ void ideWrite(CPU* cpu) {
   lseek(disk, pos, SEEK_SET);
   ram = cpu->ram;
   ram += cpu->r[15];
-  _write(disk, ram, 512);
+  write(disk, ram, 512);
   cpu->r[15] += 512;
   cpu->df = 0;
   close(disk);
