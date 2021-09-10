@@ -53,8 +53,10 @@ int main(int argc, char** argv) {
   struct timeval endTime;
   long long st,et;
   int  args;
-  char buffer[256];
+  uint8_t buffer[256];
+#ifndef _WIN32
   struct termios terminal;
+#endif
   for (i=0; i<256; i++) imap[i] = 0;
   use1805 = 0;
   useElfos = 0;
@@ -103,17 +105,23 @@ int main(int argc, char** argv) {
       }
     else if (strcmp(argv[i],"-b") == 0) {
       i++;
-      f = open(argv[i], O_RDONLY);
+      f = _open(argv[i], O_RDONLY | O_BINARY);
       if (f <= 0) {
         printf("Could not open binary file: %s\n",argv[i]);
         exit(1);
         }
-      read(f, buffer, 6);
+      if (_read(f, buffer, 6) != 6) {
+        printf("Could not read binary file header.\n");
+        exit(1);
+        }
       addr = (buffer[0] << 8) | buffer[1];
       size = (buffer[2] << 8) | buffer[3];
       exec = (buffer[4] << 8) | buffer[5];
-      read(f, &(cpu.ram[addr]), size);
-      close(f);
+      if (_read(f, &(cpu.ram[addr]), size) != size) {
+        printf("Could not load binary file into RAM.\n");
+        exit(1);
+        }
+      _close(f);
       }
     else loader(argv[i]);
     i++;
@@ -158,6 +166,7 @@ int main(int argc, char** argv) {
 
   printf("\n");
 
+#ifndef _WIN32
   if (runDebugger == 0) {
     tcgetattr(0,&terminal);
     original = terminal;
@@ -168,6 +177,7 @@ int main(int argc, char** argv) {
       exit(1);
       }
     }
+#endif
 
   runFlag = 0xff;
   cpuReset(&cpu);
@@ -195,16 +205,17 @@ int main(int argc, char** argv) {
       }
     }
   gettimeofday(&endTime, NULL);
+#ifndef _WIN32
   if (runDebugger == 0) {
     if (tcsetattr(0,TCSANOW,&original) != 0) {
       printf("Could not restore terminal attributes\n");
       }
     }
-
+#endif
   st = startTime.tv_sec * 1000000 + startTime.tv_usec;
   et = endTime.tv_sec * 1000000 + endTime.tv_usec;
   printf("\n");
-  printf("Instructions executed: %ld\n",icount);
+  printf("Instructions executed: %lld\n",icount);
   printf("Run time             : %f\n",(et-st)/1000000.0);
   printf("Instructions/second  : %f\n",icount/((et-st)/1000000.0));
 

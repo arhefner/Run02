@@ -65,7 +65,7 @@ void sret(CPU *cpu) {
   cpu->r[5] = 0xfa8d;
   }
 
-byte bcdAdd(CPU* cpu,byte a, byte b, byte c) {
+void bcdAdd(CPU* cpu,byte a, byte b, byte c) {
   cpu->d = a+b+c;
   cpu->df = 0;
   if ((cpu->d & 0x0f) >= 0x0a || ((cpu->d & 0x0f) < (a & 0x0f))) cpu->d += 0x06;
@@ -86,7 +86,6 @@ void bcdSub(CPU* cpu,byte a, byte b, byte c) {
 void cpu1805(CPU *cpu) {
   byte i;
   word d;
-  word a;
   i = cpu->ram[cpu->r[cpu->p]++];
   cpu->n = i & 0xf;
   cpu->i = (i >> 4) & 0xff;
@@ -353,7 +352,7 @@ void cpu1805(CPU *cpu) {
          break;
     case 0x0a:                                                             // RSXD
          cpu->ram[cpu->r[cpu->x]--] = (cpu->r[cpu->n] >> 8);
-         cpu->ram[cpu->r[cpu->x]--] - (cpu->r[cpu->n] & 0xff);
+         cpu->ram[cpu->r[cpu->x]--] = (cpu->r[cpu->n] & 0xff);
          cycles += 2;
          if (showTrace) {
            sprintf(tbuffer,"RSXD  R%X             M[X]=%04x\n",cpu->n,cpu->r[cpu->n]);
@@ -523,9 +522,9 @@ void doDealloc(CPU* cpu) {
 void ideBoot(CPU* cpu) {
   int disk;
   byte* ram;
-  disk = open("disk1.ide", O_RDONLY);
+  disk = _open("disk1.ide", O_RDONLY);
   if (disk < 0) {
-    printf("Attempt to boot non-existant disk, aborting.\n");
+    printf("Attempt to boot non-existent disk, aborting.\n");
     exit(1);
     }
   cpu->r[4] = 0xfa7b;
@@ -536,55 +535,60 @@ void ideBoot(CPU* cpu) {
   cpu->x = 2;
   ram = cpu->ram;
   ram += 0x0100;
-  read(disk, ram, 512);
-  close(disk);
+  if (_read(disk, ram, 512) != 512) {
+    printf("Could not read sector 0 from disk, aborting.\n");
+    exit(1);
+    }
+  _close(disk);
   }
 
 void ideRead(CPU* cpu) {
   int disk;
-  qword pos;
+  long pos;
   byte* ram;
-  disk = open("disk1.ide", O_RDONLY);
+  disk = _open("disk1.ide", O_RDONLY);
   if (disk < 0) {
-    printf("Attempt to read non-existant disk, aborting.\n");
+    printf("Attempt to read non-existent disk, aborting.\n");
     exit(1);
     }
   pos = cpu->r[8] & 0x0000ffff;
   pos = (pos << 16) | cpu->r[7];
   pos <<= 9;
-  lseek(disk, pos, SEEK_SET);
+  _lseek(disk, pos, SEEK_SET);
   ram = cpu->ram;
   ram += cpu->r[15];
-  read(disk, ram, 512);
+  if (_read(disk, ram, 512) != 512) {
+    printf("Could not read sector from disk, aborting.\n");
+    exit(1);
+    }
   cpu->r[15] += 512;
   cpu->df = 0;
-  close(disk);
+  _close(disk);
   }
 
 void ideWrite(CPU* cpu) {
   int disk;
-  qword pos;
+  long pos;
   byte* ram;
-  disk = open("disk1.ide", O_WRONLY);
+  disk = _open("disk1.ide", O_WRONLY);
   if (disk < 0) {
-    printf("Attempt to write non-existant disk, aborting.\n");
+    printf("Attempt to write non-existent disk, aborting.\n");
     exit(1);
     }
   pos = cpu->r[8] & 0x0000ffff;
   pos = (pos << 16) | cpu->r[7];
   pos <<= 9;
-  lseek(disk, pos, SEEK_SET);
+  _lseek(disk, pos, SEEK_SET);
   ram = cpu->ram;
   ram += cpu->r[15];
-  write(disk, ram, 512);
+  _write(disk, ram, 512);
   cpu->r[15] += 512;
   cpu->df = 0;
-  close(disk);
+  _close(disk);
   }
 
 void cpuCycle(CPU *cpu) {
   byte i;
-  word d;
   byte key;
   int  f;
   int  flags;
@@ -598,7 +602,7 @@ void cpuCycle(CPU *cpu) {
   long long et;
   word w;
   if (showTrace) {
-    sprintf(tbuffer,"R%x:[%04x] ",cpu->p,cpu->r[cpu->p],cpu->ram[cpu->r[cpu->p]]);
+    sprintf(tbuffer,"R%x:[%04x] ",cpu->p,cpu->r[cpu->p]);
     buffer2[1] = 0;
     }
   if (useElfos) {
@@ -613,7 +617,7 @@ void cpuCycle(CPU *cpu) {
            if (cpu->r[0x7] & 2) flags |= O_TRUNC;
            if (cpu->r[0x7] & 16) flags |= O_RDONLY;
              else flags |= O_RDWR;
-           f = open(buffer, flags, 0666);
+           f = _open(buffer, flags, 0666);
            if (f < 0) {
              cpu->df = 1;
              cpu->d = 4;
@@ -627,7 +631,7 @@ void cpuCycle(CPU *cpu) {
            cpu->ram[cpu->r[0xd]+11] = (f & 0x0000ff00) >> 8;
            cpu->ram[cpu->r[0xd]+12] = (f & 0x000000ff);
            if (cpu->r[0x7] & 4) {
-             p = lseek(f, 0, SEEK_END);
+             p = _lseek(f, 0, SEEK_END);
              cpu->ram[cpu->r[0xd]+0] = (p & 0xff000000) >> 24;
              cpu->ram[cpu->r[0xd]+1] = (p & 0x00ff0000) >> 16;
              cpu->ram[cpu->r[0xd]+2] = (p & 0x0000ff00) >> 8;
@@ -654,8 +658,8 @@ void cpuCycle(CPU *cpu) {
            f |= cpu->ram[cpu->r[0xd]+10] << 16;
            f |= cpu->ram[cpu->r[0xd]+11] << 8;
            f |= cpu->ram[cpu->r[0xd]+12];
-           cpu->r[0xc] = read(f, &(cpu->ram[cpu->r[0xf]]), cpu->r[0xc]);
-           p = lseek(f, 0, SEEK_CUR);
+           cpu->r[0xc] = _read(f, &(cpu->ram[cpu->r[0xf]]), cpu->r[0xc]);
+           p = _lseek(f, 0, SEEK_CUR);
            cpu->ram[cpu->r[0xd]+0] = (p & 0xff000000) >> 24;
            cpu->ram[cpu->r[0xd]+1] = (p & 0x00ff0000) >> 16;
            cpu->ram[cpu->r[0xd]+2] = (p & 0x0000ff00) >> 8;
@@ -675,7 +679,7 @@ void cpuCycle(CPU *cpu) {
            f |= cpu->ram[cpu->r[0xd]+10] << 16;
            f |= cpu->ram[cpu->r[0xd]+11] << 8;
            f |= cpu->ram[cpu->r[0xd]+12];
-           close(f);
+           _close(f);
            cpu->ram[cpu->r[0xd]+8] = 0;
            cpu->df = 0;
            sret(cpu);
@@ -692,8 +696,8 @@ void cpuCycle(CPU *cpu) {
            f |= cpu->ram[cpu->r[0xd]+10] << 16;
            f |= cpu->ram[cpu->r[0xd]+11] << 8;
            f |= cpu->ram[cpu->r[0xd]+12];
-           cpu->r[0xc] = write(f, &(cpu->ram[cpu->r[0xf]]), cpu->r[0xc]);
-           p = lseek(f, 0, SEEK_CUR);
+           cpu->r[0xc] = _write(f, &(cpu->ram[cpu->r[0xf]]), cpu->r[0xc]);
+           p = _lseek(f, 0, SEEK_CUR);
            cpu->ram[cpu->r[0xd]+0] = (p & 0xff000000) >> 24;
            cpu->ram[cpu->r[0xd]+1] = (p & 0x00ff0000) >> 16;
            cpu->ram[cpu->r[0xd]+2] = (p & 0x0000ff00) >> 8;
@@ -714,9 +718,9 @@ void cpuCycle(CPU *cpu) {
            f |= cpu->ram[cpu->r[0xd]+11] << 8;
            f |= cpu->ram[cpu->r[0xd]+12];
            p = (cpu->r[8] << 16) | cpu->r[7];
-           if (cpu->r[0xc] == 0) p = lseek(f, p, SEEK_SET);
-           if (cpu->r[0xc] == 1) p = lseek(f, p, SEEK_CUR);
-           if (cpu->r[0xc] == 2) p = lseek(f, p, SEEK_END);
+           if (cpu->r[0xc] == 0) p = _lseek(f, p, SEEK_SET);
+           if (cpu->r[0xc] == 1) p = _lseek(f, p, SEEK_CUR);
+           if (cpu->r[0xc] == 2) p = _lseek(f, p, SEEK_END);
            cpu->ram[cpu->r[0xd]+0] = (p & 0xff000000) >> 24;
            cpu->ram[cpu->r[0xd]+1] = (p & 0x00ff0000) >> 16;
            cpu->ram[cpu->r[0xd]+2] = (p & 0x0000ff00) >> 8;
@@ -746,7 +750,7 @@ void cpuCycle(CPU *cpu) {
            while (cpu->ram[cpu->r[0xf]] != 0)
              buffer[i++] = cpu->ram[cpu->r[0xf]++];
            buffer[i] = 0;
-           i = unlink(buffer);
+           i = _unlink(buffer);
            cpu->df = (i == 0) ? 0 : 1;
            sret(cpu);
            return;
@@ -766,7 +770,11 @@ void cpuCycle(CPU *cpu) {
            while (cpu->ram[cpu->r[0xf]] != 0)
              buffer[i++] = cpu->ram[cpu->r[0xf]++];
            buffer[i] = 0;
-           i = mkdir(buffer,0755);
+#ifdef _WIN32
+           i = _mkdir(buffer);
+#else
+           i = _mkdir(buffer, 0755);
+#endif
            cpu->df = (i == 0) ? 0 : 1;
            sret(cpu);
            return;
@@ -776,7 +784,7 @@ void cpuCycle(CPU *cpu) {
            while (cpu->ram[cpu->r[0xf]] != 0)
              buffer[i++] = cpu->ram[cpu->r[0xf]++];
            buffer[i] = 0;
-           i = chdir(buffer);
+           i = _chdir(buffer);
            cpu->df = (i == 0) ? 0 : 1;
            sret(cpu);
            return;
@@ -786,7 +794,7 @@ void cpuCycle(CPU *cpu) {
            while (cpu->ram[cpu->r[0xf]] != 0)
              buffer[i++] = cpu->ram[cpu->r[0xf]++];
            buffer[i] = 0;
-           i = rmdir(buffer);
+           i = _rmdir(buffer);
            cpu->df = (i == 0) ? 0 : 1;
            sret(cpu);
            return;
@@ -850,7 +858,7 @@ void cpuCycle(CPU *cpu) {
            break;
       case 0xff03:                                                           // f_type
            if (showTrace) strcat(tbuffer, "CALL  F_TYPE");
-           if (cpu->d == 0x0c) printf("\e[2J\e[1;1H");
+           if (cpu->d == 0x0c) printf("\x1B[2J\x1B[1;1H");
              else printf("%c",cpu->d);
            fflush(stdout);
            sret(cpu);
@@ -859,7 +867,11 @@ void cpuCycle(CPU *cpu) {
            break;
       case 0xff06:                                                           // f_read
            if (showTrace) strcat(tbuffer, "CALL  F_READ");
-           read(0,&key,1);
+#ifndef _WIN32
+           key = getchar();
+#else
+           key = _getch();
+#endif
            if (key == 127) key = 8;
            printf("%c",key);
            fflush(stdout);
@@ -882,7 +894,7 @@ void cpuCycle(CPU *cpu) {
                  strcat(tbuffer,buffer);
                  }
                }
-             if (i==0xc) printf("\e[2J\e[1;1H");
+             if (i==0xc) printf("\x1B[2J\x1B[1;1H");
                else printf("%c",i);
              i = cpu->ram[cpu->r[0xf]++];
              }
@@ -900,8 +912,12 @@ void cpuCycle(CPU *cpu) {
            if (showTrace) strcat(tbuffer, "CALL  F_INPUT");
            key = 0;
            while (key != 10 && key != 13 && key != 27) {
-             read(0,&key,1);
-             if (key >= ' ' && key < 127) {
+#ifndef _WIN32
+               key = getchar();
+#else
+               key = _getch();
+#endif
+               if (key >= ' ' && key < 127) {
                cpu->ram[cpu->r[0x0f]++] = key;
                printf("%c",key);
                fflush(stdout);
@@ -1148,7 +1164,7 @@ void cpuCycle(CPU *cpu) {
                  strcat(tbuffer,buffer);
                  }
                }
-             if (i == 0xc) printf("\e[2J\e[1;1H");
+             if (i == 0xc) printf("\x1B[2J\x1B[1;1H");
                else printf("%c",i);
              i = cpu->ram[cpu->r[6]++];
              }
@@ -1268,9 +1284,11 @@ void cpuCycle(CPU *cpu) {
       }
     if (cpu->r[cpu->p] >= 0xf000) {
       printf("Unsupported BIOS call: %04x\n",cpu->r[cpu->p]);
+#ifndef _WIN32
       if (tcsetattr(0,TCSANOW,&original) != 0) {
         printf("Could not restore terminal attributes\n");
         }
+#endif
       exit(1);
       }
     }

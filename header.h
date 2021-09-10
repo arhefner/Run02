@@ -4,15 +4,23 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <termios.h>
+#include <stdint.h>
 #include <fcntl.h>
+#ifdef _WIN32
+#include <io.h>
+#include <conio.h>
+#include <direct.h>
+#include "sys/time.h"
+#else
+#include <termios.h>
 #include <unistd.h>
 #include <sys/time.h>
+#endif
 
-typedef u_int64_t qword;
-typedef u_int32_t dword;
-typedef u_int16_t word;
-typedef u_int8_t byte;
+typedef uint64_t qword;
+typedef uint32_t dword;
+typedef uint16_t word;
+typedef uint8_t byte;
 
 #ifdef MAIN
 #define LINK
@@ -63,8 +71,10 @@ LINK word ramEnd;
 LINK int  imap[256];
 LINK char mmap[256];
 LINK double freq;
-LINK struct termios original;
 LINK byte liveUpdate;
+#ifndef _WIN32
+LINK struct termios original;
+#endif
 LINK char **conditions;
 LINK int    numConditions;
 LINK byte useConditions;

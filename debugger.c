@@ -13,55 +13,55 @@ void output(char* line) {
     strcpy(display[i],display[i+1]);
   strcpy(display[15], line);
   for (i=0; i<16; i++) {
-    printf("\e[%d;14H",i+5);
+    printf("\x1B[%d;14H",i+5);
     printf("%-66s",display[i]);
     }
   }
 
 void showScreen(CPU* cpu) {
   int i;
-  printf("\e[1;1H");
+  printf("\x1B[1;1H");
   printf("+---------+\n");
   for (i=0; i<16; i++)
     printf("| R%X %04X |\n",i,cpu->r[i]);
   printf("+---------+\n");
-  printf("\e[1;12H");
+  printf("\x1B[1;12H");
   printf(" +------+ +------+ +-----+ +-----+ +------+ +-----+ +------+\n");
-  printf("\e[2;13H");
+  printf("\x1B[2;13H");
   printf("| D %02X | | DF %X | | X %X | | P %X | | T %02X | | Q %X | | IE %X |\n",
     cpu->d, cpu->df, cpu->x, cpu->p, cpu->t, cpu->q, cpu->ie);
-  printf("\e[3;12H");
+  printf("\x1B[3;12H");
   printf(" +------+ +------+ +-----+ +-----+ +------+ +-----+ +------+\n");
-  printf("\e[4;13H");
+  printf("\x1B[4;13H");
   printf("+------------------------------------------------------------------+\n");
   for (i=0; i<16; i++) {
-    printf("\e[%d;13H",i+5);
+    printf("\x1B[%d;13H",i+5);
     printf("|                                                                  |\n");
     }
-  printf("\e[21;13H");
+  printf("\x1B[21;13H");
   printf("+------------------------------------------------------------------+\n");
-  printf("\e[22;1H");
+  printf("\x1B[22;1H");
   }
 
 void updateScreen(CPU* cpu) {
   int i;
-  printf("\e[1;1H");
+  printf("\x1B[1;1H");
   printf("+---------+\n");
   for (i=0; i<16; i++)
     printf("| R%X %04X |\n",i,cpu->r[i]);
   printf("+---------+\n");
-  printf("\e[1;12H");
+  printf("\x1B[1;12H");
   printf(" +------+ +------+ +-----+ +-----+ +------+ +-----+ +------+\n");
-  printf("\e[2;13H");
+  printf("\x1B[2;13H");
   printf("| D %02X | | DF %X | | X %X | | P %X | | T %02X | | Q %X | | IE %X |\n",
     cpu->d, cpu->df, cpu->x, cpu->p, cpu->t, cpu->q, cpu->ie);
-  printf("\e[3;12H");
+  printf("\x1B[3;12H");
   printf(" +------+ +------+ +-----+ +-----+ +------+ +-----+ +------+\n");
-  printf("\e[1;75H");
+  printf("\x1B[1;75H");
   if (useConditions) printf("CND"); else printf("   ");
-  printf("\e[23;1H");
+  printf("\x1B[23;1H");
   printf("%79s"," ");
-  printf("\e[22;1H");
+  printf("\x1B[22;1H");
   }
 
 word disassem1805(CPU* cpu, word address) {
@@ -551,7 +551,7 @@ char* hexToBin(char* buffer, word *ret) {
   }
 
 void dbgShowCpu(CPU* cpu) {
-  int x,y;
+  int x;
   char buffer[80];
   if (useVisual) {
     output("");
@@ -1201,7 +1201,7 @@ void help() {
     output("!P bb bb  ..   - store bytes at M[R[P]]");
     output("!X bb bb  ..   - store bytes at M[R[X]]");
     output("!Rn bb bb  ..  - store bytes at M[R[n]]");
-    printf("\e[23;1H--MORE--");
+    printf("\x1B[23;1H--MORE--");
     fgets(buffer,255,stdin);
     output("+ bb bb ..     - push values to stack (STXD)");
     output("-n             - pop n items from stack (IRX * n)");
@@ -1219,7 +1219,7 @@ void help() {
     output("D=b            - Set D to b");
     output("DF             - show value in DF");
     output("DF=b           - set value in DF");
-    printf("\e[23;1H--MORE--");
+    printf("\x1B[23;1H--MORE--");
     fgets(buffer,255,stdin);
     output("DI bb          - perform DMA In using bb as input");
     output("DO             - perform DMA Out");
@@ -1237,7 +1237,7 @@ void help() {
     output("T=n            - set T to n");
     output("T?             - show instruction traps");
     output("T+bb           - add instruction trap");
-    printf("\e[23;1H--MORE--");
+    printf("\x1B[23;1H--MORE--");
     fgets(buffer,255,stdin);
     output("T-bb           - remove instruction trap");
     output("TR+            - turn on tracing");
@@ -1316,7 +1316,7 @@ void debugger(CPU* cpu) {
   flag = 0xff;
   numBreakpoints = 0;
   for (i=0; i<256; i++) traps[i] = 0;
-  if (useVisual) printf("\e[H\e[2J");
+  if (useVisual) printf("\x1B[H\x1B[2J");
   if (useVisual) showScreen(cpu);
   while (flag) {
     if (useVisual) updateScreen(cpu);
