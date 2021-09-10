@@ -696,7 +696,7 @@ void cpuCycle(CPU *cpu) {
            f |= cpu->ram[cpu->r[0xd]+10] << 16;
            f |= cpu->ram[cpu->r[0xd]+11] << 8;
            f |= cpu->ram[cpu->r[0xd]+12];
-           cpu->r[0xc] = _write(f, &(cpu->ram[cpu->r[0xf]]), cpu->r[0xc]);
+           cpu->r[0xc] = write(f, &(cpu->ram[cpu->r[0xf]]), cpu->r[0xc]);
            p = lseek(f, 0, SEEK_CUR);
            cpu->ram[cpu->r[0xd]+0] = (p & 0xff000000) >> 24;
            cpu->ram[cpu->r[0xd]+1] = (p & 0x00ff0000) >> 16;
