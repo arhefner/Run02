@@ -1183,6 +1183,7 @@ void dbgRun(CPU* cpu, char* buffer) {
   }
 
 void help() {
+  byte key;
   if (useVisual) {
     output("?              - dump memory");
     output("?P             - dump memory from R[P]");
@@ -1202,9 +1203,9 @@ void help() {
     output("!Rn bb bb  ..  - store bytes at M[R[n]]");
     printf("\x1B[23;1H--MORE--");
 #ifndef _WIN32
-    getchar();
+    read(0, &key, 1);
 #else
-    _getch();
+    key = _getch();
 #endif
     output("+ bb bb ..     - push values to stack (STXD)");
     output("-n             - pop n items from stack (IRX * n)");
@@ -1224,9 +1225,9 @@ void help() {
     output("DF=b           - set value in DF");
     printf("\x1B[23;1H--MORE--");
 #ifndef _WIN32
-    getchar();
+    read(0, &key, 1);
 #else
-    _getch();
+    key = _getch();
 #endif
     output("DI bb          - perform DMA In using bb as input");
     output("DO             - perform DMA Out");
@@ -1246,9 +1247,9 @@ void help() {
     output("T+bb           - add instruction trap");
     printf("\x1B[23;1H--MORE--");
 #ifndef _WIN32
-    getchar();
+    read(0, &key, 1);
 #else
-    _getch();
+    key = _getch();
 #endif
     output("T-bb           - remove instruction trap");
     output("TR+            - turn on tracing");

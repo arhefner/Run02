@@ -868,7 +868,7 @@ void cpuCycle(CPU *cpu) {
       case 0xff06:                                                           // f_read
            if (showTrace) strcat(tbuffer, "CALL  F_READ");
 #ifndef _WIN32
-           key = getchar();
+           read(0,&key,1);
 #else
            key = _getch();
 #endif
@@ -913,7 +913,7 @@ void cpuCycle(CPU *cpu) {
            key = 0;
            while (key != 10 && key != 13 && key != 27) {
 #ifndef _WIN32
-               key = getchar();
+               read(0,&key,1);
 #else
                key = _getch();
 #endif
