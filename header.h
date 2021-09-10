@@ -16,6 +16,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <sys/time.h>
+#define O_BINARY        0
 #endif
 
 typedef uint64_t qword;
