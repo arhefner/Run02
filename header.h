@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 #ifdef _WIN32
+#pragma warning(disable: 4996)
 #include <io.h>
 #include <conio.h>
 #include <direct.h>

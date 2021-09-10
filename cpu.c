@@ -522,7 +522,7 @@ void doDealloc(CPU* cpu) {
 void ideBoot(CPU* cpu) {
   int disk;
   byte* ram;
-  disk = _open("disk1.ide", O_RDONLY);
+  disk = open("disk1.ide", O_RDONLY);
   if (disk < 0) {
     printf("Attempt to boot non-existent disk, aborting.\n");
     exit(1);
@@ -535,18 +535,18 @@ void ideBoot(CPU* cpu) {
   cpu->x = 2;
   ram = cpu->ram;
   ram += 0x0100;
-  if (_read(disk, ram, 512) != 512) {
+  if (read(disk, ram, 512) != 512) {
     printf("Could not read sector 0 from disk, aborting.\n");
     exit(1);
     }
-  _close(disk);
+  close(disk);
   }
 
 void ideRead(CPU* cpu) {
   int disk;
   long pos;
   byte* ram;
-  disk = _open("disk1.ide", O_RDONLY);
+  disk = open("disk1.ide", O_RDONLY);
   if (disk < 0) {
     printf("Attempt to read non-existent disk, aborting.\n");
     exit(1);
@@ -554,23 +554,23 @@ void ideRead(CPU* cpu) {
   pos = cpu->r[8] & 0x0000ffff;
   pos = (pos << 16) | cpu->r[7];
   pos <<= 9;
-  _lseek(disk, pos, SEEK_SET);
+  lseek(disk, pos, SEEK_SET);
   ram = cpu->ram;
   ram += cpu->r[15];
-  if (_read(disk, ram, 512) != 512) {
+  if (read(disk, ram, 512) != 512) {
     printf("Could not read sector from disk, aborting.\n");
     exit(1);
     }
   cpu->r[15] += 512;
   cpu->df = 0;
-  _close(disk);
+  close(disk);
   }
 
 void ideWrite(CPU* cpu) {
   int disk;
   long pos;
   byte* ram;
-  disk = _open("disk1.ide", O_WRONLY);
+  disk = open("disk1.ide", O_WRONLY);
   if (disk < 0) {
     printf("Attempt to write non-existent disk, aborting.\n");
     exit(1);
@@ -578,13 +578,13 @@ void ideWrite(CPU* cpu) {
   pos = cpu->r[8] & 0x0000ffff;
   pos = (pos << 16) | cpu->r[7];
   pos <<= 9;
-  _lseek(disk, pos, SEEK_SET);
+  lseek(disk, pos, SEEK_SET);
   ram = cpu->ram;
   ram += cpu->r[15];
   _write(disk, ram, 512);
   cpu->r[15] += 512;
   cpu->df = 0;
-  _close(disk);
+  close(disk);
   }
 
 void cpuCycle(CPU *cpu) {
@@ -617,7 +617,7 @@ void cpuCycle(CPU *cpu) {
            if (cpu->r[0x7] & 2) flags |= O_TRUNC;
            if (cpu->r[0x7] & 16) flags |= O_RDONLY;
              else flags |= O_RDWR;
-           f = _open(buffer, flags, 0666);
+           f = open(buffer, flags, 0666);
            if (f < 0) {
              cpu->df = 1;
              cpu->d = 4;
@@ -631,7 +631,7 @@ void cpuCycle(CPU *cpu) {
            cpu->ram[cpu->r[0xd]+11] = (f & 0x0000ff00) >> 8;
            cpu->ram[cpu->r[0xd]+12] = (f & 0x000000ff);
            if (cpu->r[0x7] & 4) {
-             p = _lseek(f, 0, SEEK_END);
+             p = lseek(f, 0, SEEK_END);
              cpu->ram[cpu->r[0xd]+0] = (p & 0xff000000) >> 24;
              cpu->ram[cpu->r[0xd]+1] = (p & 0x00ff0000) >> 16;
              cpu->ram[cpu->r[0xd]+2] = (p & 0x0000ff00) >> 8;
@@ -658,8 +658,8 @@ void cpuCycle(CPU *cpu) {
            f |= cpu->ram[cpu->r[0xd]+10] << 16;
            f |= cpu->ram[cpu->r[0xd]+11] << 8;
            f |= cpu->ram[cpu->r[0xd]+12];
-           cpu->r[0xc] = _read(f, &(cpu->ram[cpu->r[0xf]]), cpu->r[0xc]);
-           p = _lseek(f, 0, SEEK_CUR);
+           cpu->r[0xc] = read(f, &(cpu->ram[cpu->r[0xf]]), cpu->r[0xc]);
+           p = lseek(f, 0, SEEK_CUR);
            cpu->ram[cpu->r[0xd]+0] = (p & 0xff000000) >> 24;
            cpu->ram[cpu->r[0xd]+1] = (p & 0x00ff0000) >> 16;
            cpu->ram[cpu->r[0xd]+2] = (p & 0x0000ff00) >> 8;
@@ -679,7 +679,7 @@ void cpuCycle(CPU *cpu) {
            f |= cpu->ram[cpu->r[0xd]+10] << 16;
            f |= cpu->ram[cpu->r[0xd]+11] << 8;
            f |= cpu->ram[cpu->r[0xd]+12];
-           _close(f);
+           close(f);
            cpu->ram[cpu->r[0xd]+8] = 0;
            cpu->df = 0;
            sret(cpu);
@@ -697,7 +697,7 @@ void cpuCycle(CPU *cpu) {
            f |= cpu->ram[cpu->r[0xd]+11] << 8;
            f |= cpu->ram[cpu->r[0xd]+12];
            cpu->r[0xc] = _write(f, &(cpu->ram[cpu->r[0xf]]), cpu->r[0xc]);
-           p = _lseek(f, 0, SEEK_CUR);
+           p = lseek(f, 0, SEEK_CUR);
            cpu->ram[cpu->r[0xd]+0] = (p & 0xff000000) >> 24;
            cpu->ram[cpu->r[0xd]+1] = (p & 0x00ff0000) >> 16;
            cpu->ram[cpu->r[0xd]+2] = (p & 0x0000ff00) >> 8;
@@ -718,9 +718,9 @@ void cpuCycle(CPU *cpu) {
            f |= cpu->ram[cpu->r[0xd]+11] << 8;
            f |= cpu->ram[cpu->r[0xd]+12];
            p = (cpu->r[8] << 16) | cpu->r[7];
-           if (cpu->r[0xc] == 0) p = _lseek(f, p, SEEK_SET);
-           if (cpu->r[0xc] == 1) p = _lseek(f, p, SEEK_CUR);
-           if (cpu->r[0xc] == 2) p = _lseek(f, p, SEEK_END);
+           if (cpu->r[0xc] == 0) p = lseek(f, p, SEEK_SET);
+           if (cpu->r[0xc] == 1) p = lseek(f, p, SEEK_CUR);
+           if (cpu->r[0xc] == 2) p = lseek(f, p, SEEK_END);
            cpu->ram[cpu->r[0xd]+0] = (p & 0xff000000) >> 24;
            cpu->ram[cpu->r[0xd]+1] = (p & 0x00ff0000) >> 16;
            cpu->ram[cpu->r[0xd]+2] = (p & 0x0000ff00) >> 8;

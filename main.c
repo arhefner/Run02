@@ -105,23 +105,23 @@ int main(int argc, char** argv) {
       }
     else if (strcmp(argv[i],"-b") == 0) {
       i++;
-      f = _open(argv[i], O_RDONLY | O_BINARY);
+      f = open(argv[i], O_RDONLY | O_BINARY);
       if (f <= 0) {
         printf("Could not open binary file: %s\n",argv[i]);
         exit(1);
         }
-      if (_read(f, buffer, 6) != 6) {
+      if (read(f, buffer, 6) != 6) {
         printf("Could not read binary file header.\n");
         exit(1);
         }
       addr = (buffer[0] << 8) | buffer[1];
       size = (buffer[2] << 8) | buffer[3];
       exec = (buffer[4] << 8) | buffer[5];
-      if (_read(f, &(cpu.ram[addr]), size) != size) {
+      if (read(f, &(cpu.ram[addr]), size) != size) {
         printf("Could not load binary file into RAM.\n");
         exit(1);
         }
-      _close(f);
+      close(f);
       }
     else loader(argv[i]);
     i++;
