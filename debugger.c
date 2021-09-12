@@ -1183,7 +1183,7 @@ void dbgRun(CPU* cpu, char* buffer) {
   }
 
 void help() {
-  byte key;
+  char buffer[256];
   if (useVisual) {
     output("?              - dump memory");
     output("?P             - dump memory from R[P]");
@@ -1202,11 +1202,7 @@ void help() {
     output("!X bb bb  ..   - store bytes at M[R[X]]");
     output("!Rn bb bb  ..  - store bytes at M[R[n]]");
     printf("\x1B[23;1H--MORE--");
-#ifndef _WIN32
-    read(0, &key, 1);
-#else
-    key = _getch();
-#endif
+    fgets(buffer,255,stdin);
     output("+ bb bb ..     - push values to stack (STXD)");
     output("-n             - pop n items from stack (IRX * n)");
     output("@              - run at R[P]");
@@ -1224,11 +1220,7 @@ void help() {
     output("DF             - show value in DF");
     output("DF=b           - set value in DF");
     printf("\x1B[23;1H--MORE--");
-#ifndef _WIN32
-    read(0, &key, 1);
-#else
-    key = _getch();
-#endif
+    fgets(buffer,255,stdin);
     output("DI bb          - perform DMA In using bb as input");
     output("DO             - perform DMA Out");
     output("I              - trigger interrupt action");
@@ -1246,11 +1238,7 @@ void help() {
     output("T?             - show instruction traps");
     output("T+bb           - add instruction trap");
     printf("\x1B[23;1H--MORE--");
-#ifndef _WIN32
-    read(0, &key, 1);
-#else
-    key = _getch();
-#endif
+    fgets(buffer,255,stdin);
     output("T-bb           - remove instruction trap");
     output("TR+            - turn on tracing");
     output("TR-            - turn off tracing");
