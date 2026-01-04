@@ -1,6 +1,6 @@
 #include "header.h"
 
-  char tmp[256];
+char tmp[256];
 
 word d_address;
 word breakpoints[1024];
@@ -377,18 +377,18 @@ word disassem(CPU* cpu, word address) {
                 break;
            case 0x0c:
                 adr = cpu->ram[address++];
-                sprintf(tmp, "%02x %02x         ADCI   %02X",inst,adr,adr);
+                sprintf(tmp, "%02x %02x       ADCI   %02X",inst,adr,adr);
                 break;
            case 0x0d:
                 adr = cpu->ram[address++];
-                sprintf(tmp, "%02x %02x         SDBI   %02X",inst,adr,adr);
+                sprintf(tmp, "%02x %02x       SDBI   %02X",inst,adr,adr);
                 break;
            case 0x0e:
                 sprintf(tmp, "%02x          SHLC",inst);
                 break;
            case 0x0f:
                 adr = cpu->ram[address++];
-                sprintf(tmp, "%02x %02x         SMBI   %02X",inst,adr,adr);
+                sprintf(tmp, "%02x %02x       SMBI   %02X",inst,adr,adr);
                 break;
            }
          break;
@@ -468,7 +468,17 @@ word disassem(CPU* cpu, word address) {
            }
          break;
     case 0xd0:
-         sprintf(tmp, "%02x          SEP    %X",inst,n);
+         if (useSCRT && (n == 4)) {
+           adr = cpu->ram[address++] << 8;
+           adr |= cpu->ram[address++];
+           sprintf(tmp, "%02x %02x %02x    CALL   %04X",inst,(adr & 0xff00)>>8,adr&0xff,adr);
+           }
+         else if (useSCRT && (n == 5)) {
+           sprintf(tmp, "%02x          RTN",inst);
+           }
+         else {
+           sprintf(tmp, "%02x          SEP    %X",inst,n);
+           }
          break;
     case 0xe0:
          sprintf(tmp, "%02x          SEX    %X",inst,n);
@@ -598,7 +608,7 @@ void dbgShowCpu(CPU* cpu) {
 
 void dbgShow(CPU* cpu, char* buffer) {
   int x,y;
-  char line[80];
+  char line[135];
   char tmp[32];
   word a;
   if (*buffer == 'i' || *buffer == 'I') {
@@ -900,6 +910,11 @@ void dbgCmdI(CPU* cpu, char* buffer) {
       }
     }
   else cpuIntr(cpu,'E');
+  }
+
+void dbgCmdL(CPU* cpu, char* buffer) {
+  while (isspace(*buffer)) buffer++;
+  loader(buffer);
   }
 
 void dbgCmdP(CPU* cpu, char* buffer) {
@@ -1267,6 +1282,7 @@ void help() {
     output("I              - trigger interrupt action");
     output("IE             - show state of IE");
     output("IE=b           - set IE");
+    output("Lhexfile       - load hex file");
     output("P              - show value of P");
     output("P=n            - set P to n");
     output("Q              - show value of Q");
@@ -1275,9 +1291,9 @@ void help() {
     output("Rn             - show value of Rn");
     output("Rn=xxxx        - set Rn to xxxx");
     output("T              - show value of T");
-    output("T=n            - set T to n");
     printf("\e[23;1H--MORE--");
     fgets(buffer,255,stdin);
+    output("T=n            - set T to n");
     output("T?             - show instruction traps");
     output("T+bb           - add instruction trap");
     output("T-bb           - remove instruction trap");
@@ -1329,6 +1345,7 @@ void help() {
     printf("I              - trigger interrupt action\n");
     printf("IE             - show state of IE\n");
     printf("IE=b           - set IE\n");
+    printf("Lhexfile       - load hex file\n");
     printf("P              - show value of P\n");
     printf("P=n            - set P to n\n");
     printf("Q              - show value of Q\n");
@@ -1380,6 +1397,7 @@ void debugger(CPU* cpu) {
     if (buffer[0] == 'b' || buffer[0] == 'B') dbgCmdB(cpu, buffer+1);
     if (buffer[0] == 'c' || buffer[0] == 'C') dbgCmdC(cpu, buffer+1);
     if (buffer[0] == 'd' || buffer[0] == 'D') dbgCmdD(cpu, buffer+1);
+    if (buffer[0] == 'l' || buffer[0] == 'L') dbgCmdL(cpu, buffer+1);
     if (buffer[0] == 'p' || buffer[0] == 'P') dbgCmdP(cpu, buffer+1);
     if (buffer[0] == 'r' || buffer[0] == 'R') dbgCmdR(cpu, buffer+1);
     if (buffer[0] == 'x' || buffer[0] == 'X') dbgCmdX(cpu, buffer+1);

@@ -622,11 +622,8 @@ void cpuCycle(CPU *cpu) {
   char buffer[32];
   char buffer2[2];
   char name2[32];
-  struct timeval tv;
   time_t tim;
   struct tm dt;
-  long long st;
-  long long et;
   word w;
   if (showTrace) {
     sprintf(tbuffer,"R%x:[%04x] ",cpu->p,cpu->r[cpu->p]);
@@ -917,7 +914,7 @@ void cpuCycle(CPU *cpu) {
              cpu->ram[cpu->r[0xf]++] = dt.tm_sec;
              cpu->df = 0;
              sret(cpu);
-             return; 
+             return;
              }
            break;
       case 0xf818:                                                           // f_settod
@@ -1442,7 +1439,7 @@ void cpuCycle(CPU *cpu) {
            if (useF800) cpu->r[0xf] |= 0x40;
            sret(cpu);
            if (showTrace) trace(tbuffer);
-           return; 
+           return;
            break;
       case 0xff87:                                                           // f_sdread
            if (showTrace) strcat(tbuffer, "CALL  F_SDREAD");

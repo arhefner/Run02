@@ -4,17 +4,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <termios.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <ctype.h>
 
-typedef u_int64_t qword;
-typedef u_int32_t dword;
-typedef u_int16_t word;
-typedef u_int8_t byte;
+typedef uint64_t qword;
+typedef uint32_t dword;
+typedef uint16_t word;
+typedef uint8_t byte;
 
 #ifdef MAIN
 #define LINK
@@ -52,7 +54,6 @@ typedef struct {
 
 LINK CPU  cpu;
 LINK int  cycles;
-//LINK long long icount;
 LINK int64_t icount;
 LINK byte runFlag;
 LINK byte use1805;
@@ -63,6 +64,7 @@ LINK byte useF800;
 LINK byte useRTC;
 LINK byte useUART;
 LINK byte useNVR;
+LINK byte useSCRT;
 LINK byte elfos4;
 LINK byte runDebugger;
 LINK byte showMap;

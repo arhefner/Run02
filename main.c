@@ -161,6 +161,7 @@ void processArg(char* arg) {
   else if (strcmp(arg,"-nuart") == 0) useUART = 0;
   else if (strcmp(arg,"-nvr") == 0) useNVR = 0xff;
   else if (strcmp(arg,"-nnvr") == 0) useNVR = 0;
+  else if (strcmp(arg,"-scrt") == 0) useSCRT = 0xff;
   else if (strncmp(arg,"-ram=",5) == 0) processMem(arg+5,'A');
   else if (strncmp(arg,"-rom=",5) == 0) processMem(arg+5,'O');
   else if (strncmp(arg,"-none=",6) == 0) processMem(arg+6,'X');
@@ -171,7 +172,7 @@ void processArg(char* arg) {
   else if (strncmp(arg,"-c=",3) == 0) {
     freq = 125000 * atof(arg+3);
     freq /= 100;
-printf("Cycles per 10ms: %d\n",freq);
+    printf("Cycles per 10ms: %d\n",freq);
     }
   else if (strncmp(arg,"-a=",3) == 0) {
     strcpy(args, arg+3);
@@ -190,7 +191,10 @@ printf("Cycles per 10ms: %d\n",freq);
     read(f, &(cpu.ram[addr]), size);
     close(f);
     }
-  else loader(arg);
+  else if (loader(arg) != 0) {
+    printf("Could not open input file: %s\n",arg);
+    exit(1);
+    }
   }
 
 void controlC(int i) {
@@ -221,6 +225,7 @@ int main(int argc, char** argv) {
   useRTC = 0;
   useUART = 0;
   useNVR = 0;
+  useSCRT = 0;
   liveUpdate = 0;
   runDebugger = 0;
   elfos4 = 0;
@@ -262,7 +267,7 @@ int main(int argc, char** argv) {
     processArg(argv[i]);
     i++;
     }
-  
+
 //  signal(SIGINT, controlC);
 
   for (i=0; i<256; i++) mmap[i] = 'X';
@@ -393,7 +398,7 @@ int main(int argc, char** argv) {
   st = startTime.tv_sec * 1000000 + startTime.tv_usec;
   et = endTime.tv_sec * 1000000 + endTime.tv_usec;
   printf("\n");
-  printf("Instructions executed: %lld\n",icount);
+  printf("Instructions executed: %ld\n",icount);
   printf("Run time             : %f\n",(et-st)/1000000.0);
   printf("Instructions/second  : %f\n",icount/((et-st)/1000000.0));
 

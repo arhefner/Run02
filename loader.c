@@ -26,10 +26,7 @@ int loader(char* filename) {
   char  mode;
   int   pos;
   infile = fopen(filename,"r");
-  if (infile == NULL) {
-    printf("Could not open input file: %s\n",filename);
-    exit(1);
-    }
+  if (infile == NULL) return -1;
   address = 0;
   value = 0;
   valid = 0;
@@ -66,7 +63,7 @@ int loader(char* filename) {
           address = 0;
           }
         else if (buffer[pos] == ' ') {
-          if (valid) 
+          if (valid)
             if (mode == 'B') cpu.ram[address++] = value;
           valid = 0;
           mode = 'B';

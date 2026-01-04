@@ -30,6 +30,7 @@ Command line switches:
   -ram=nnnn-mmmm  - Mark region from nnnn to mmmm as RAM
   -rom=nnnn-mmmm  - Mark region from nnnn to mmmm as ROM
   -rtc            - Enable RTC
+  -scrt           - Assume SCRT in 1802 disassembly
   -t              - Turn on command tracing
   -u              - Turn on live update in visual debugger
   -uart           - Enable UART
